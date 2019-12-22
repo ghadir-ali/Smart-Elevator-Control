@@ -1,0 +1,67 @@
+#include <xmmintrin.h> //Header for intrinsic functions
+#include <stdio.h>
+#include <time.h>
+int main()
+{
+// Variables definition and initialization
+int MAX_DIM = 100;
+float a[MAX_DIM][MAX_DIM] __attribute__ ((aligned(16)));
+float b[MAX_DIM][MAX_DIM] __attribute__ ((aligned(16)));
+float c[MAX_DIM][MAX_DIM] __attribute__ ((aligned(16)));
+float d[MAX_DIM][MAX_DIM] __attribute__ ((aligned(16)));
+
+
+for (int i = 0; i < MAX_DIM; ++i)
+{
+for (int j = 0; j < MAX_DIM; ++j)
+{
+a[i][j] = 1; // Arbitrary initializations - Replace to test your multiplication
+
+b[i][j] = 2; // Arbitrary initializations - Replace to test your multiplication
+c[i][j] = 0; // Necessary Initialization - Don't change
+d[i][j] = 0; // Necessary Initialization - Don't change
+}
+}
+// Unoptimized Matrix Multiplication
+clock_t Time1 = clock();
+for (int i = 0; i < MAX_DIM; ++i)
+{
+for (int j = 0; j < MAX_DIM; ++j)
+{
+for (int k = 0; k < MAX_DIM; k++)
+{
+c[i][j] += a[i][k] * b[k][j];
+}
+}
+}
+clock_t Time2 = clock();
+clock_t Time3 = clock();
+// YOUR CODE HERE
+
+__m128 t;
+
+for(int i=0;i<MAX_DIM;i+=1){
+
+      for(int j=0;j<MAX_DIM;j+=4){
+
+        for(int k=0;k<MAX_DIM;k+=4){
+
+                    __m128 element_a = _mm_load_ps(&a[i][k]);
+                    __m128 element_b = _mm_load_ps(&b[k][j]);
+                    __m128 element_c = _mm_mul_ps(element_a, element_b);
+                    t = _mm_add_ps (t, element_c);
+                    _mm_store_ps(&c[i][j], t);
+
+        }
+      }
+}
+
+
+clock_t Time4 = clock();
+// Calculate and print execution times
+double TotalTimeLoop = ((double) Time2 - (double) Time1) / CLOCKS_PER_SEC;
+double TotalTimeSIMD = ((double) Time4 - (double) Time3) / CLOCKS_PER_SEC;
+printf(" Time taken by loop is %.7f \n", TotalTimeLoop);
+printf(" Time taken by SIMD optimized code is %.7f \n", TotalTimeSIMD);
+return 0;
+}
